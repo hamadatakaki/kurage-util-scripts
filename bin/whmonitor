@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+whpost "ドクター、元気？"
