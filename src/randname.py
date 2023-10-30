@@ -10,21 +10,19 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--extension")
     args = parser.parse_args()
 
-    vec = []
-
+    pre = ""
     if args.prefix is not None:
         pre = str(args.prefix)
-        vec.append(pre)
 
     ts = str(int(datetime.now().timestamp()))
-    vec.append(ts)
 
+    suf = ""
     if args.suffix is not None:
         suf = str(args.suffix)
-        vec.append(suf)
 
     ext = str(args.extension or "txt")
 
+    vec = [pre, ts, suf]
     name = "-".join(vec)
 
     print(f"{name}.{ext}")
