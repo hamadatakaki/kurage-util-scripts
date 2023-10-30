@@ -14,7 +14,22 @@ git clone https://github.com/hamadatakaki/kurage-util-scripts.git .kurage-util-s
 export PATH="$HOME/.kurage-util-scripts/bin/:$PATH"
 ```
 
-3. `kusdoctor` を叩いてテスト
+3. `.env` を設定
+
+```
+cd ~/.kurage-util-scripts
+cat .env.example > .env
+vim .env
+```
+
+4. 依存関係のセットアップ
+
+```
+cd ~/.kurage-util-scripts
+tools/setup.sh
+```
+
+5. `kusdoctor` を叩いてテスト
 
 ## 新しいスクリプトの追加
 
