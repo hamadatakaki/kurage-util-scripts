@@ -29,11 +29,13 @@ class BotWebHook(object):
             sys.exit(1)
 
     def call_message(self, message):
+        assert load_dotenv()
+        user_id = os.environ.get("DISCORD_USER_ID")
         headers = {
             "Content-Type": "application/json",
             "User-Agent": "DiscordBot (private use)",
         }
-        content = {"content": message}
+        content = {"content": f"ドクター（ <@{user_id}> ）、{message}、だよ。"}
         data = json.dumps(content)
 
         res = requests.post(self.url, headers=headers, data=data)
