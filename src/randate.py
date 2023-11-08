@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-from datetime import datetime
 import random
+from datetime import datetime
 
 
 def random_datestr():

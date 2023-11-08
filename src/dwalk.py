@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
 
 from common.path import has_extension, include_hidden

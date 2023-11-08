@@ -1,6 +1,7 @@
-from pathlib import Path
-import yaml
 from datetime import datetime
+from pathlib import Path
+
+import yaml
 
 
 def custom_dump(obj) -> str:

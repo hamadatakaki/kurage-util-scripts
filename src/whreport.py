@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
-from dotenv import load_dotenv
-from common.webhook import Webhook
-from common.bot.monchan import Rosmontis
+import os
 
+from dotenv import load_dotenv
+
+from common.bot.monchan import Rosmontis
+from common.webhook import Webhook
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

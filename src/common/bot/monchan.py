@@ -1,7 +1,8 @@
 import os
 
 from dotenv import load_dotenv
-from common.format import floattime_to_str, floattime_to_datetime
+
+from common.format import floattime_to_datetime, floattime_to_str
 
 
 class Rosmontis(object):
@@ -25,4 +26,8 @@ class Rosmontis(object):
         s_dt = floattime_to_str(ft_end - ft_start)
 
         message = f"{s_start}に監視を始めて、{s_end}に監視をおわったよ。\nその間にだいたい{s_dt}くらい経過したよ。"
+        return message
+
+    def no_object_report(self, object: str) -> str:
+        message = f"{self.doctor_name()}、{object}は存在しないよ。"
         return message

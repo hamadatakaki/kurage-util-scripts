@@ -1,7 +1,8 @@
-import requests
 import json
-import urllib.parse
 import sys
+import urllib.parse
+
+import requests
 
 import common.log
 

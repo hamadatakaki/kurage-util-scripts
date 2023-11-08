@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
-import psutil
-import time
-import threading
+import os
 import queue
+import sys
+import threading
+import time
+
+import psutil
 from dotenv import load_dotenv
-from common.webhook import Webhook
+
 from common.bot.monchan import Rosmontis
+from common.log import verbose
+from common.webhook import Webhook
+
+
+class NoProcessException(BaseException):
+    pass
+
+
+# TODO: checkが終了したときに強制的にprogressを行うような実装に修正
 
 
 class ProcessMonitor(object):
@@ -20,13 +31,20 @@ class ProcessMonitor(object):
         bot: Rosmontis,
         report_interval: int,
         check_interval: int,
+        is_verbose: bool,
     ):
+        ps = process_reference(pid)
+
+        if ps == None:
+            raise NoProcessException
+
         self.pid = pid
         self.name = name
         self.wh = wh
         self.bot = bot
         self.report_interval = report_interval
         self.check_interval = check_interval
+        self.is_verbose = is_verbose
 
     def track(self):
         t_start = time.time()
@@ -51,6 +69,10 @@ class ProcessMonitor(object):
     def __check(self, t_start: float, interval: int, share_queue: queue.Queue):
         while True:
             ps = process_reference(self.pid)
+
+            if self.is_verbose:
+                self.__verbose_check(ps == None)
+
             if ps == None:
                 share_queue.put(True)
                 break
@@ -58,14 +80,31 @@ class ProcessMonitor(object):
             time_wait = interval - (time.time() - t_start) % interval
             time.sleep(time_wait)
 
+    def __verbose_check(self, finished: bool):
+        if finished:
+            verbose(f"check: task `{self.name}` finished.")
+        else:
+            verbose(f"check: task `{self.name}` does not finish.")
+
     def __progress(self, t_start: float, interval: int, share_queue: queue.Queue):
         while True:
-            if share_queue.full():
+            cv_changed = share_queue.full()
+
+            if self.is_verbose:
+                self.__verbose_progress(cv_changed)
+
+            if cv_changed:
                 break
 
             self.progress_report(t_start)
             time_wait = interval - (time.time() - t_start) % interval
             time.sleep(time_wait)
+
+    def __verbose_progress(self, finished: bool):
+        if finished:
+            verbose("progress: CV changed.")
+        else:
+            verbose("progress: CV does not change.")
 
     def progress_report(self, t_start: float):
         ft = time.time() - t_start
@@ -89,9 +128,9 @@ def process_reference(pid: int):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--pid", required=True)
     parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("--name", default="プロセス")
-    parser.add_argument("--pid")
     parser.add_argument("--report_interval", default=3600)
     parser.add_argument("--check_interval", default=5)
     args = parser.parse_args()
@@ -103,10 +142,7 @@ if __name__ == "__main__":
     wh = Webhook(webhook_url)
     monchan = Rosmontis(user_id)
 
-    if args.pid == None:
-        message = monchan.complete_report(args.name)
-        wh(message)
-    else:
+    try:
         monitor = ProcessMonitor(
             int(args.pid),
             args.name,
@@ -114,5 +150,9 @@ if __name__ == "__main__":
             monchan,
             int(args.report_interval),
             int(args.check_interval),
+            args.verbose,
         )
         monitor.track()
+    except NoProcessException:
+        wh(monchan.no_object_report(f"{args.name}（PID: {args.pid}）"))
+        sys.exit(1)

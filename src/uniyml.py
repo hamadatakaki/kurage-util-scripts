@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+
 import yaml
+
 import util
 
 if __name__ == "__main__":
