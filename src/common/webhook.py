@@ -38,5 +38,5 @@ class Webhook(object):
     def headers(self) -> dict[str, str]:
         return {
             "Content-Type": "application/json",
-            "User-Agent": "DiscordBot (private use)",
+            "User-Agent": "Bot (private use)",
         }
