@@ -19,9 +19,6 @@ class NoProcessException(BaseException):
     pass
 
 
-# TODO: checkが終了したときに強制的にprogressを行うような実装に修正
-
-
 class ProcessMonitor(object):
     def __init__(
         self,
@@ -48,25 +45,24 @@ class ProcessMonitor(object):
 
     def track(self):
         t_start = time.time()
-        share_queue = queue.Queue(maxsize=1)
+        cv = queue.Queue(maxsize=1)
 
         th_progress = threading.Thread(
-            target=lambda: self.__progress(t_start, self.report_interval, share_queue),
+            target=lambda: self.progress_thread(t_start, self.report_interval, cv),
             daemon=True,
         )
         th_check = threading.Thread(
-            target=lambda: self.__check(t_start, self.check_interval, share_queue),
+            target=lambda: self.check_thread(t_start, self.check_interval, cv),
             daemon=True,
         )
         th_progress.start()
         th_check.start()
-
-        th_check.join()
         th_progress.join()
+        th_check.join()
 
         self.complete_report(t_start, time.time())
 
-    def __check(self, t_start: float, interval: int, share_queue: queue.Queue):
+    def check_thread(self, t_start: float, interval: int, cv: queue.Queue):
         while True:
             ps = process_reference(self.pid)
 
@@ -74,7 +70,7 @@ class ProcessMonitor(object):
                 self.__verbose_check(ps == None)
 
             if ps == None:
-                share_queue.put(True)
+                cv.put(True)
                 break
 
             time_wait = interval - (time.time() - t_start) % interval
@@ -86,19 +82,22 @@ class ProcessMonitor(object):
         else:
             verbose(f"check: task `{self.name}` does not finish.")
 
-    def __progress(self, t_start: float, interval: int, share_queue: queue.Queue):
-        while True:
-            cv_changed = share_queue.full()
+    def progress_thread(self, t_start: float, interval: int, cv: queue.Queue):
+        t_next_progress = t_start + interval
 
-            if self.is_verbose:
-                self.__verbose_progress(cv_changed)
+        while True:
+            cv_changed = cv.full()
+
+            t_now = time.time()
+            if t_now > t_next_progress:
+                if self.is_verbose:
+                    self.__verbose_progress(cv_changed)
+
+                self.progress_report(t_start)
+                t_next_progress += interval
 
             if cv_changed:
                 break
-
-            self.progress_report(t_start)
-            time_wait = interval - (time.time() - t_start) % interval
-            time.sleep(time_wait)
 
     def __verbose_progress(self, finished: bool):
         if finished:
@@ -108,10 +107,10 @@ class ProcessMonitor(object):
 
     def progress_report(self, t_start: float):
         ft = time.time() - t_start
-        self.wh(self.bot.progress_report(self.name, ft))
+        self.wh(self.bot.progress_report(f"{self.name}（PID: {self.pid}）", ft))
 
     def complete_report(self, t_start: float, t_end: float):
-        message = self.bot.complete_report(self.name)
+        message = self.bot.complete_report(f"{self.name}（PID: {self.pid}）")
         if t_end - t_start > 5:
             time_rep = self.bot.time_report(t_start, t_end)
             message = f"{message}\n{time_rep}"

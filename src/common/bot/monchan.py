@@ -1,7 +1,3 @@
-import os
-
-from dotenv import load_dotenv
-
 from common.format import floattime_to_datetime, floattime_to_str
 
 
@@ -25,7 +21,7 @@ class Rosmontis(object):
         s_end = floattime_to_datetime(ft_end)
         s_dt = floattime_to_str(ft_end - ft_start)
 
-        message = f"{s_start}に監視を始めて、{s_end}に監視をおわったよ。\nその間にだいたい{s_dt}くらい経過したよ。"
+        message = f"{s_start}に監視を始めて、{s_end}に監視をおわったよ。\nその間に{s_dt}経過したよ。"
         return message
 
     def no_object_report(self, object: str) -> str:
