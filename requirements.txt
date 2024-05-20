@@ -4,3 +4,5 @@ psutil
 python-dotenv
 PyYAML
 requests
+lxml
+beautifulsoup4
