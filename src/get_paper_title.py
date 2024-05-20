@@ -9,7 +9,13 @@ def main(arxiv_id: str):
     time.sleep(0.5)
     res = requests.get(f"http://export.arxiv.org/api/query?id_list={arxiv_id}")
     bs = BeautifulSoup(res.text, "xml")
-    print(bs.feed.entry.title.string.replace("\n", ""), end="")
+
+    try:
+        title = bs.feed.entry.title.string.replace("\n", "")
+    except:
+        title = ""
+
+    return title
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -22,4 +28,4 @@ if __name__ == "__main__":
 
     arxiv_id = args.id
 
-    main(arxiv_id)
+    print(main(arxiv_id), end="")
